@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Document</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='black'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-size='44' font-weight='700' font-family='Arial, Helvetica, sans-serif' fill='%23006BFF'%3ED%3C/text%3E%3C/svg%3E"
+  />
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/buble.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" />
+
+  <style>
+    .latex-citation {
+      white-space: nowrap;
+    }
+
+    .latex-citation a,
+    .latex-reference-backlink {
+      text-decoration: none;
+    }
+
+    .latex-citation-missing {
+      color: #b31d28;
+      cursor: help;
+    }
+
+    .latex-references {
+      padding-left: 2rem;
+    }
+
+    .latex-references li {
+      margin: 0 0 0.75rem;
+      padding-left: 0.25rem;
+    }
+
+    .d2-diagram {
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+
+    .d2-diagram svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .d2-diagram img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <!-- Parse the project root refs.bib for every document. -->
+  <script src="//cdn.jsdelivr.net/npm/bibtex-parse-js@0.0.24/bibtexParse.js"></script>
+
+  <script>
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function cleanBibtex(value) {
+      return String(value || '')
+        .replace(/[{}]/g, '')
+        .replace(/--/g, '–')
+        .trim();
+    }
+
+    function entryField(entry, name) {
+      const tags = entry.entryTags || {};
+      return cleanBibtex(tags[name] || tags[name.toUpperCase()]);
+    }
+
+    function formatAuthors(authorField) {
+      const authors = authorField.split(/\s+and\s+/i).filter(Boolean).map(function (author) {
+        const parts = author.split(',').map(function (part) { return part.trim(); });
+        return parts.length > 1 ? parts.slice(1).join(' ') + ' ' + parts[0] : parts[0];
+      });
+
+      if (authors.length < 2) return authors[0] || '';
+      if (authors.length === 2) return authors.join(' and ');
+      return authors.slice(0, -1).join(', ') + ', and ' + authors[authors.length - 1];
+    }
+
+    function formatReference(entry) {
+      const author = formatAuthors(entryField(entry, 'author'));
+      const title = entryField(entry, 'title');
+      const venue = entryField(entry, 'journal') || entryField(entry, 'booktitle');
+      const publisher = entryField(entry, 'publisher');
+      const year = entryField(entry, 'year');
+      const doi = entryField(entry, 'doi');
+      const url = entryField(entry, 'url') || (doi ? 'https://doi.org/' + doi : '');
+      const parts = [];
+
+      if (author) parts.push(escapeHtml(author) + '.');
+      if (title) parts.push('“' + escapeHtml(title) + '.”');
+      if (venue) parts.push('<em>' + escapeHtml(venue) + '</em>.');
+      if (publisher) parts.push(escapeHtml(publisher) + '.');
+      if (year) parts.push(escapeHtml(year) + '.');
+      if (url) {
+        const safeUrl = escapeHtml(url);
+        parts.push('<a href="' + safeUrl + '" target="_blank" rel="noopener">' + safeUrl + '</a>.');
+      }
+
+      return parts.join(' ');
+    }
+
+    function bibliographyPath(routeFile) {
+      // Resolve against the site base, including sites hosted in a subdirectory.
+      return new URL('refs.bib', window.location.href.split('#')[0]).href;
+    }
+
+    function loadBibliography(path) {
+      // Revalidate every rendered page so a checkpoint is visible without reload.
+      return fetch(path, { cache: 'no-cache' }).then(function (response) {
+        if (!response.ok) throw new Error('No bibliography found at ' + path);
+        return response.text();
+      }).then(function (bibtex) {
+        const normalizedBibtex = bibtex.replace(
+          /(\bmonth\s*=\s*)([a-z]+)(\s*[,}])/gi, '$1{$2}$3'
+        );
+        return bibtexParse.toJSON(normalizedBibtex);
+      });
+    }
+
+    function hideFrontmatter(markdown) {
+      return markdown.replace(/^\uFEFF?---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
+    }
+
+    function renderLatexCitations(markdown, entries, routePath) {
+      const entryByKey = new Map(entries.map(function (entry) {
+        return [entry.citationKey, entry];
+      }));
+      const citedKeys = [];
+      const citationCount = new Map();
+      const citationPattern = /\\cite(?:\s*\[[^\]]*\])?\s*\{([^{}]+)\}/g;
+      const routeAnchor = '#' + String(routePath || '/');
+      const querySeparator = routeAnchor.includes('?') ? '&' : '?';
+
+      const renderedMarkdown = markdown.replace(citationPattern, function (_, keyList) {
+        const links = keyList.split(',').map(function (rawKey) {
+          const key = rawKey.trim();
+          const entry = entryByKey.get(key);
+
+          if (!entry) {
+            return '<span class="latex-citation-missing" title="Unknown citation key: ' +
+              escapeHtml(key) + '">?</span>';
+          }
+
+          if (!citedKeys.includes(key)) citedKeys.push(key);
+          const number = citedKeys.indexOf(key) + 1;
+          const occurrence = (citationCount.get(key) || 0) + 1;
+          citationCount.set(key, occurrence);
+          const citeId = 'cite-' + number + '-' + occurrence;
+          const tooltip = [formatAuthors(entryField(entry, 'author')), entryField(entry, 'year')]
+            .filter(Boolean).join(', ');
+
+          return '<a id="' + citeId + '" href="' + escapeHtml(routeAnchor) +
+            querySeparator + 'id=cite-ref-' + number + '" title="' +
+            escapeHtml(tooltip) + '">' + number + '</a>';
+        });
+
+        return '<span class="latex-citation">[' + links.join(', ') + ']</span>';
+      });
+
+      if (!citedKeys.length) return renderedMarkdown;
+
+      const references = citedKeys.map(function (key, index) {
+        const number = index + 1;
+        return '<li id="cite-ref-' + number + '">' + formatReference(entryByKey.get(key)) +
+          ' <a class="latex-reference-backlink" href="' + escapeHtml(routeAnchor) +
+          querySeparator + 'id=cite-' + number + '-1" ' +
+          'aria-label="Back to citation ' + number + '">↩</a></li>';
+      }).join('\n');
+
+      return renderedMarkdown + '\n\n<h2 id="references">References</h2>\n' +
+        '<ol class="latex-references">\n' + references + '\n</ol>\n';
+    }
+
+    function textEncode(value) {
+      if (window.TextEncoder) return new TextEncoder('utf-8').encode(value);
+
+      const utf8 = unescape(encodeURIComponent(value));
+      const result = new Uint8Array(utf8.length);
+      for (let index = 0; index < utf8.length; index += 1) {
+        result[index] = utf8.charCodeAt(index);
+      }
+      return result;
+    }
+
+    function bytesToBase64Url(bytes) {
+      const chunkSize = 0x8000;
+      let binary = '';
+
+      for (let index = 0; index < bytes.length; index += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(index, index + chunkSize));
+      }
+
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
+    }
+
+    function renderD2Diagrams() {
+      document
+        .querySelectorAll('pre > code.lang-d2, pre > code.language-d2')
+        .forEach(function (code) {
+          const pre = code.parentElement;
+          if (!pre || pre.dataset.d2Rendering === 'true') return;
+
+          pre.dataset.d2Rendering = 'true';
+
+          if (!window.pako || typeof window.pako.deflate !== 'function') {
+            pre.dataset.d2Rendering = 'false';
+            console.error('D2 rendering failed: pako is not loaded.');
+            return;
+          }
+
+          const encoded = bytesToBase64Url(window.pako.deflate(textEncode(code.textContent), {
+            level: 9
+          }));
+
+          const container = document.createElement('div');
+          const img = document.createElement('img');
+
+          container.className = 'd2-diagram';
+          img.alt = 'D2 diagram';
+          img.loading = 'lazy';
+          img.src = 'https://kroki.io/d2/svg/' + encoded;
+          img.onerror = function () {
+            pre.dataset.d2Rendering = 'false';
+            console.error('D2 rendering failed: Kroki image request failed.');
+            if (container.isConnected) container.replaceWith(pre);
+          };
+
+          pre.replaceWith(container);
+          container.appendChild(img);
+        });
+    }
+
+    function toMermaidMarkdownLabel(label) {
+      const trimmed = label.trim();
+
+      if (!trimmed || /^["'`]/.test(trimmed)) return label;
+
+      return '"`' + label
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/`/g, '\\`') + '`"';
+    }
+
+    function normalizeMermaidFlowcharts(markdown) {
+      return markdown.replace(/```mermaid\n([\s\S]*?)```/g, function (_, diagram) {
+        if (!/^\s*flowchart\s+/m.test(diagram)) return '```mermaid\n' + diagram + '```';
+
+        const renderedDiagram = diagram.replace(
+          /(\b[A-Za-z][\w-]*)(\[)([^\]\n]+)(\])/g,
+          function (match, id, open, label, close) {
+            return id + open + toMermaidMarkdownLabel(label) + close;
+          }
+        );
+
+        return '```mermaid\n' + renderedDiagram + '```';
+      });
+    }
+
+    // Research projects start at project_overview.md; other checkouts fall back to README.md.
+    function homepageFile() {
+      try {
+        const request = new XMLHttpRequest();
+        request.open('HEAD', 'project_overview.md', false);
+        request.send();
+        if (request.status === 200) return 'project_overview.md';
+      } catch (error) {}
+      return 'README.md';
+    }
+
+    window.$docsify = {
+      name: 'Research proposal',
+      repo: '',
+      auto2top: false,
+      loadSidebar: true,
+      homepage: homepageFile(),
+      alias: { '/.*/_sidebar.md': '/_sidebar.md' },
+      plugins: [
+        function (hook, vm) {
+          hook.beforeEach(function (markdown, next) {
+            markdown = normalizeMermaidFlowcharts(hideFrontmatter(markdown));
+
+            if (!/\\cite(?:\s*\[[^\]]*\])?\s*\{/.test(markdown)) {
+              next(markdown);
+              return;
+            }
+
+            loadBibliography(bibliographyPath(vm.route.file))
+              .then(function (entries) {
+                next(renderLatexCitations(markdown, entries, vm.route.path));
+              })
+              .catch(function (error) {
+                console.warn(error.message);
+                next(renderLatexCitations(markdown, [], vm.route.path));
+              });
+          });
+
+          hook.afterEach(function (html, next) {
+            // Optional user-owned configuration: window.RESEARCH_EDIT_BASE_URL.
+            const base = window.RESEARCH_EDIT_BASE_URL;
+            if (!base) { next(html); return; }
+            const url = base.replace(/\/?$/, '/') + vm.route.file;
+            next(html + '<hr><a href="' + escapeHtml(url) + '">Edit this page</a>');
+          });
+
+          hook.doneEach(function () {
+            if (typeof renderMathInElement === 'function') {
+              const markdownSection = document.querySelector('.markdown-section');
+
+              if (markdownSection) {
+                renderMathInElement(markdownSection, {
+                  delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                  ],
+                  ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                  throwOnError: false
+                });
+              }
+            }
+
+            renderD2Diagrams();
+          });
+        }
+      ],
+
+      // Search plugin
+      search: {
+        placeholder: 'Search',
+        noData: 'No results',
+        depth: 6
+      },
+
+      // Mermaid plugin
+      mermaidConfig: {
+        querySelector: ".mermaid",
+        flowchart: {
+          wrappingWidth: 420
+        }
+      }
+    };
+  </script>
+
+  <!-- KaTeX -->
+  <script src="//cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/katex@latest/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Kroki GET URL encoder for D2 diagrams -->
+  <script src="//cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako_deflate.min.js"></script>
+
+  <!-- Docsify -->
+  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+
+  <!-- Search plugin -->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+
+  <!-- Mermaid + Docsify Mermaid plugin -->
+  <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-mermaid@latest/dist/docsify-mermaid.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      flowchart: {
+        wrappingWidth: 420
+      }
+    });
+  </script>
+</body>
+</html>

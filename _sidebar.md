@@ -1,0 +1,10 @@
+* [README](README.md)
+* [Implementation plan](IMPLEMENTATION_PLAN.md)
+* Skills
+  * [rs-help](skills/rs-help/SKILL.md)
+  * [rs-paper](skills/rs-paper/SKILL.md)
+  * [rs-research](skills/rs-research/SKILL.md)
+  * [rs-save](skills/rs-save/SKILL.md)
+  * [rs-threads](skills/rs-threads/SKILL.md)
+  * [rs-todo](skills/rs-todo/SKILL.md)
+  * [rs-write](skills/rs-write/SKILL.md)

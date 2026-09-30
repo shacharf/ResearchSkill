@@ -1,0 +1,5 @@
+---
+name: rs-todo
+description: Promote a selected TODO into a research thread and perform a checkpointed switch; accepts --start ID.---
+
+Use `rsagent todo --json` or `rsagent todo --next` for file-order selection. Adding/removing TODOs uses direct rsagent commands without synthesis; paused investigations remain threads. For --start ID, first checkpoint the current discussion with rs-save. Then run `rsagent todo --start ID` to create the thread, remove the item only after creation succeeds, and select the new thread (an interrupted run is completed by rerunning it). Read `rsagent status` and confirm the saved state and selected topic. Preserve the TODO's motivation and originating-thread provenance in the new thread. Promotion selects the new pointer, but cannot save unsaved chat history. Do not rank or reorder topics without the user's direction.

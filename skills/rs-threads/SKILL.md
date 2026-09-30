@@ -1,0 +1,7 @@
+---
+name: rs-threads
+description: Select or create a research thread and switch after saving the current discussion; accepts a thread ID.---
+
+For selection without an explicit ID, run `rsagent threads --json` and show a compact ID/title/status list; use host selection controls if available with a text fallback. Use `--all` when the user wants obsolete threads. Do not invent a portable slash-command popup.
+Before changing the active pointer, follow rs-save to checkpoint any active discussion, including unfinished reasoning. Only after success create with `rsagent thread create "title"` if requested, reopen a closed/obsolete target with `rsagent thread state ID open` if requested, and select with `rsagent thread select ID`. These code helpers never summarize conversation themselves. Read `rsagent status` and confirm the saved checkpoint and new focus. Clearing is optional through the host's own interface after success; rsagent cannot reset a chat.
+For requested close/obsolete transitions, checkpoint first and use `rsagent thread state ID closed|obsolete`; the active pointer must not reference a non-open thread. For deletion, preview `rsagent thread delete ID`, describe affected references and ambiguous links, then use the returned explicit confirmation token only after the user's deletion confirmation. Preserve independent topics, sources, manuscript claims and unresolved incoming prose; report pending GNO cleanup as partial deletion.

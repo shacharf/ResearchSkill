@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-rs"
+version = "0.1.0"
+description = "Markdown-first research workflow bookkeeping"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+
+[project.scripts]
+rsagent = "rs.cli:main"
+
+[tool.setuptools]
+packages = ["rs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

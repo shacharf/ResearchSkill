@@ -1,0 +1,5 @@
+# Research collaboration
+
+Run `rsagent status` once to resume the project brief and active thread; retrieve missing context deliberately. Work on one thread and immediate question. Use project-local rs-research, rs-save, rs-threads, rs-todo, rs-write, rs-paper and rs-help skills. Deterministic bookkeeping uses the rsagent CLI directly.
+Preserve research reasoning and evidence at meaningful checkpoints and before switching/ending. Label tentative ideas and user-confirmed conclusions distinctly. Source notes describe sources; interpretations belong in threads. Park tangents in TODO.md. Never edit paper.md without an explicit manuscript request. Save successfully before optionally clearing the host chat. Abrupt exit can lose conversation-only material.
+Markdown and keywords.yaml are authoritative; refs.bib, generated navigation and GNO indexes are derived. Use project-scoped rsagent search for unknown locations and direct commands for known IDs. Never run Git commands. Do not silently extend keyword vocabulary or overwrite manual edits. See RESEARCH_WORKFLOW.md for commands and recovery.

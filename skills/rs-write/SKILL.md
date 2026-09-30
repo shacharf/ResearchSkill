@@ -1,0 +1,6 @@
+---
+name: rs-write
+description: Transfer selected research outcomes and evidence into an explicitly requested manuscript section.---
+
+Require an explicit manuscript-writing request and identify its target section. Read the relevant thread reasoning and supporting source passages; one-sentence source summaries are insufficient support for scientific claims. Draft only the selected outcomes into the requested section of paper.md, preserving manual edits and other sections. Separate supported results from conjectures and include appropriate limitations. Use `$...$`, `$$...$$`, and `\cite{0002}` with registered stable keys. For Related work, start from the "Related work paragraph" in each relevant paper note (`rsagent paper show REF`): reuse and adapt it to the surrounding text, group papers by theme, and keep its citations; do not paste paragraphs verbatim without checking they fit the section.
+A thread may contribute a small claim, subsection, section or nothing and may remain open. Do not add results/conclusion sections automatically. Run `rsagent checkpoint` and `rsagent validate` to refresh bibliography and validate citations/links. Resolve unknown keys by registration or correcting the reference, never invent bibliographic metadata. Briefly identify the changed manuscript section and evidence.
