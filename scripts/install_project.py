@@ -83,6 +83,9 @@ def install(project: Path, engine: str, skip_gno: bool = False) -> dict:
         if metadata.get('name') != source.parent.name:
             raise ValueError(f'Invalid skill metadata: {source}')
         desired[f'{skill_dir}/skills/{source.parent.name}/SKILL.md'] = data
+        for extra in sorted(source.parent.glob('*')):  # supporting files such as overview.md
+            if extra.is_file() and extra.name != 'SKILL.md':
+                desired[f'{skill_dir}/skills/{source.parent.name}/{extra.name}'] = extra.read_bytes()
     desired['RESEARCH_WORKFLOW.md'] = (SOURCE / 'README.md').read_bytes()
     if engine == 'claude':
         desired['.rs/claude-settings.json'] = (json.dumps(CLAUDE_SETTINGS, indent=2) + '\n').encode()

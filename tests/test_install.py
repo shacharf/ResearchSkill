@@ -140,3 +140,8 @@ def test_warns_when_rsagent_missing_from_path(tmp_path, monkeypatch):
     monkeypatch.setattr(installer.shutil, 'which', lambda name: None if name == 'rsagent' else real(name))
     result = installer.install(tmp_path, 'codex', True)
     assert any('rsagent command is not on PATH' in w for w in result['warnings'])
+
+
+def test_skill_support_files_are_installed(tmp_path):
+    installer.install(tmp_path, 'claude', True)
+    assert (tmp_path / '.claude/skills/rs-paper/overview.md').exists()

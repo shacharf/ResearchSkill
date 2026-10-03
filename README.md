@@ -119,7 +119,8 @@ Quote arguments that contain spaces. Read commands support `--json`.
 | `rsagent paper add "ID/URL/local-file"` | Register a paper and create its note |
 | `rsagent paper list [--kw keyword]` | List papers |
 | `rsagent paper discuss REF` | Give an undiscussed paper (`x0003`) its permanent discussion number |
-| `rsagent paper show REF` | Print only the paper's summary block |
+| `rsagent paper show REF [--overview]` | Print only the paper's summary block (or its initial overview) |
+| `rsagent paper overview REF [--file F]` | Create or replace the initial overview block from standard input or a file |
 | `rsagent paper summary REF [--file F]` | Create or replace the summary block from standard input or a file |
 | `rsagent keywords --paper KEY [kw1,kw2]` | Show / add labels for a source |
 | `rsagent source add URL --type repo\|tool\|web` | Register a non-paper source |
@@ -137,7 +138,9 @@ Quote arguments that contain spaces. Read commands support `--json`.
 
 Cite as `\cite{0002}`. The first time a paper is discussed (`rsagent paper discuss 3` or `/rs-paper 3`) it is renamed from `x0003` to the next free discussion number, and `\cite{x0003}` and note links are rewritten. Numbers are never reused.
 
-### Paper summaries
+### Paper overview and summaries
+
+When you start discussing a paper, the agent reads the whole PDF and gives an initial overview of how it works: goal, training inputs, input representations, target construction, what is predicted, losses and learning, inference, a concrete example from the paper, meaning and limitations, and one main idea (no benchmark results). The prompt is `skills/rs-paper/overview.md`. The overview is saved in the note (`<!-- rs:overview:start -->` block, `rsagent paper show REF --overview`). The summary below is written later from the saved overview, the Q&A you had, and the paper, using the clarifications from the discussion to improve on the overview.
 
 Each paper note has a summary block (between `<!-- rs:summary:start -->` and `<!-- rs:summary:end -->`). It is written by the agent at every save, switch, pause or close for the papers discussed in that conversation, and on request with `/rs-paper REF`:
 

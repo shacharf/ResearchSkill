@@ -442,33 +442,51 @@ def discuss(project, ref):
         return {'key': new, 'path': _find(project, new)['path'], 'previous': row['key']}
 
 
-def show_summary(project, ref):
+BLOCKS = {'summary': (SUMMARY_START, SUMMARY_END, '## Summary'),
+          'overview': ('<!-- rs:overview:start -->', '<!-- rs:overview:end -->', '## Initial overview')}
+
+
+def show_summary(project, ref, overview=False):
+    """Return the managed summary block (or, with overview=True, the initial overview block) of a paper note."""
+    kind = 'overview' if overview else 'summary'
+    start, end, _ = BLOCKS[kind]
     row = _find(project, ref)
     _, body = read_doc(project.root / row['path'])
-    if SUMMARY_START not in body or SUMMARY_END not in body:
-        return {'key': row['key'], 'path': row['path'], 'summary': None, 'message': 'note has no summary block'}
-    block = body[body.index(SUMMARY_START) + len(SUMMARY_START):body.index(SUMMARY_END)].strip()
-    return {'key': row['key'], 'path': row['path'], 'summary': block}
+    if start not in body or end not in body:
+        return {'key': row['key'], 'path': row['path'], 'summary': None, 'message': f'note has no {kind} block'}
+    return {'key': row['key'], 'path': row['path'], 'summary': body[body.index(start) + len(start):body.index(end)].strip()}
 
 
-def set_summary(project, ref, text):
-    """Replace (or insert, after the title) the managed summary block of a paper note."""
+def _set_block(project, ref, kind, text):
+    """Replace a managed block, or insert it (summary after the title, overview after the summary)."""
+    start, end, heading = BLOCKS[kind]
     text = text.strip()
     if not text:
-        raise ValueError('summary text is empty')
-    if not text.startswith('## Summary'):
-        text = '## Summary\n\n' + text
-    block = f'{SUMMARY_START}\n{text}\n{SUMMARY_END}\n'
+        raise ValueError(f'{kind} text is empty')
+    if not text.startswith(heading):
+        text = heading + '\n\n' + text
+    block = f'{start}\n{text}\n{end}\n'
     with project.lock():
         row = _find(project, ref)
         path = project.root / row['path']
         meta, body = read_doc(path)
-        if SUMMARY_START in body and SUMMARY_END in body:
-            start, stop = body.index(SUMMARY_START), body.index(SUMMARY_END) + len(SUMMARY_END)
-            body = body[:start] + block.rstrip('\n') + body[stop:]
+        if start in body and end in body:
+            body = body[:body.index(start)] + block.rstrip('\n') + body[body.index(end) + len(end):]
         else:
-            heading = re.match(r'(?:\s*# [^\n]*\n)?', body)
-            body = body[:heading.end()] + '\n' * (heading.end() > 0) + block + '\n' + body[heading.end():].lstrip('\n')
+            anchor = re.match(r'(?:\s*# [^\n]*\n)?', body).end()
+            if kind == 'overview' and BLOCKS['summary'][1] in body:
+                anchor = body.index(BLOCKS['summary'][1]) + len(BLOCKS['summary'][1])
+                body = body[:anchor] + '\n\n' + block + '\n' + body[anchor:].lstrip('\n')
+            else:
+                body = body[:anchor] + '\n' * (anchor > 0) + block + '\n' + body[anchor:].lstrip('\n')
         project.transaction({path: doc_text(meta, body)})
         project.enqueue([path])
     return {'key': row['key'], 'path': row['path']}
+
+
+def set_summary(project, ref, text):
+    return _set_block(project, ref, 'summary', text)
+
+
+def set_overview(project, ref, text):
+    return _set_block(project, ref, 'overview', text)

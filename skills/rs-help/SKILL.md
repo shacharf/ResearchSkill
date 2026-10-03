@@ -12,11 +12,11 @@ Answer briefly from this reference; do not read project files unless asked. Run 
 - `rs-save` — save reasoning and update the resume now, even if unfinished.
 - `rs-threads [ID]` — save, then create/select/switch thread; without ID shows a short list.
 - `rs-todo --start ID` — save, then promote a TODO to a thread and switch.
-- `rs-paper REF` — number a paper on first discussion and write/update its summary (Main idea, Training setup, Key Q&A, Relevance, Related work paragraph, Reading notes).
+- `rs-paper REF` — number a paper on first discussion, present an initial overview (algorithm, architecture, data, losses), and write/update its summary (Main idea, Training setup, Key Q&A, Relevance, Related work paragraph, Reading notes).
 - `rs-write` — write a chosen outcome into a named section of paper.md (only when asked).
 - `rs-help` — this summary.
 
-**Direct commands** (prefix `!` in the agent terminal; quote arguments with spaces): `rsagent status`, `threads [--all] [--kw k]`, `todo ["text"|--next|--done ID|--delete ID]`, `keywords [k1,k2|--global|--paper KEY [k1,k2]]`, `paper add "DOI/arXiv/URL/file"`, `paper list`, `paper discuss REF`, `paper show REF`, `paper summary REF` (stdin), `source add URL --type repo|tool|web`, `search "phrase" [--hybrid]`, `thread delete ID` (preview, then `--confirm TOKEN`), `validate`, `index status|flush`.
+**Direct commands** (prefix `!` in the agent terminal; quote arguments with spaces): `rsagent status`, `threads [--all] [--kw k]`, `todo ["text"|--next|--done ID|--delete ID]`, `keywords [k1,k2|--global|--paper KEY [k1,k2]]`, `paper add "DOI/arXiv/URL/file"`, `paper list`, `paper discuss REF`, `paper show REF [--overview]`, `paper overview REF` / `paper summary REF` (stdin), `source add URL --type repo|tool|web`, `search "phrase" [--hybrid]`, `thread delete ID` (preview, then `--confirm TOKEN`), `validate`, `index status|flush`.
 
 **Paper numbers:** discussed papers are `0001_title.md`, numbered in discussion order and never renumbered; undiscussed ones are `x0003_title.md`; repos/tools/web are `s0001`. Reference papers by number only (`2`, `0002`, `x3`); cite as `\cite{0002}`.
 

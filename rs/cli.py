@@ -33,7 +33,9 @@ def parser():
     add = papers.add_parser('add'); add.add_argument('input'); metadata_options(add)
     listing = papers.add_parser('list'); listing.add_argument('--kw')
     for name in ('discuss', 'show'): papers.add_parser(name).add_argument('ref')
-    summary = papers.add_parser('summary'); summary.add_argument('ref'); summary.add_argument('--file', help='read the summary from FILE (default: standard input)')
+    shown = papers.choices['show']; shown.add_argument('--overview', action='store_true', help='print the initial overview block instead of the summary')
+    for name in ('summary', 'overview'):
+        writer = papers.add_parser(name); writer.add_argument('ref'); writer.add_argument('--file', help=f'read the {name} from FILE (default: standard input)')
     sources = commands.add_parser('source').add_subparsers(dest='operation', required=True)
     add = sources.add_parser('add'); add.add_argument('input'); add.add_argument('--type', required=True, choices=['repo', 'tool', 'web']); metadata_options(add)
     listing = sources.add_parser('list'); listing.add_argument('--kw')
@@ -82,11 +84,12 @@ def run(args, project):
             with project.lock(): return project.keywords(args.labels, args.paper)
         return project.keywords(key=args.paper)
     if args.command in ('paper', 'source'):
-        from .sources import register, list_sources, discuss, show_summary, set_summary
+        from .sources import register, list_sources, discuss, show_summary, set_summary, set_overview
         if args.operation == 'discuss': return discuss(project, args.ref)
-        if args.operation == 'show': return show_summary(project, args.ref)
-        if args.operation == 'summary':
-            return set_summary(project, args.ref, Path(args.file).read_text() if args.file else sys.stdin.read())
+        if args.operation == 'show': return show_summary(project, args.ref, args.overview)
+        if args.operation in ('summary', 'overview'):
+            text = Path(args.file).read_text() if args.file else sys.stdin.read()
+            return (set_summary if args.operation == 'summary' else set_overview)(project, args.ref, text)
         if args.operation == 'add':
             return register(project, args.input, type='paper' if args.command == 'paper' else args.type,
                             title=args.title, organization=args.organization, year=args.year)

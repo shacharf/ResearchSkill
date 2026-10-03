@@ -1,13 +1,13 @@
 ---
 name: rs-paper
-description: Start or summarize a paper discussion. Gives an undiscussed paper its permanent number and writes or updates the discussion summary in the paper note. Use when the user asks to summarize or discuss a paper by number.
+description: Start or summarize a paper discussion. Gives an undiscussed paper its permanent number, presents an initial overview of its algorithm, and writes or updates the discussion summary in the paper note. Use when the user asks to discuss, get an overview of, or summarize a paper by number.
 ---
 
 Papers are referenced only by number (`2`, `0002`, `x3`). Undiscussed papers are `x`-prefixed (`x0003_title.md`); the first time one is discussed it receives the next discussion number, which never changes afterwards.
 
 1. Run `rsagent paper discuss REF` (a no-op if the paper already has its number) and note the printed key and path. Use the new number from then on, including in `\cite{...}`; the command rewrites existing references itself.
-2. Read the note with `rsagent paper show REF`; open the full note only if reading notes are needed.
-3. From this conversation, write the summary using the format below and save it with `rsagent paper summary REF` (pass the text on standard input, e.g. with a quoted heredoc `<<'EOF'`, or use `--file`). The command creates or replaces only the managed summary block and leaves the rest of the note intact. Revise earlier content instead of appending a second summary. Keep it brief (about 300-450 words, excluding Reading notes and the related work paragraph) but capture the main points. Distinguish Confirmed (user agreed) from Tentative (suggested). Do not invent details not in the paper or discussion; write "unknown" or "not discussed" instead.
+2. **Initial overview (first time this paper is discussed, or when asked for an overview).** Check `rsagent paper show REF --overview`; if there is none, read the whole PDF and write the overview following [overview.md](overview.md) in this skill's folder. Present it to the user in the chat, then save it with `rsagent paper overview REF` (text on standard input, e.g. a quoted heredoc `<<'EOF'`, or `--file`). Then continue the discussion with the user; their questions will refine it.
+3. **Summary (on request, and at every save/switch/pause/close).** Read the current summary (`rsagent paper show REF`), the saved overview (`rsagent paper show REF --overview`) and this conversation. The overview is the starting point: where the discussion clarified or corrected something that was unclear or wrong in it, the summary must use the clarified version, not the original wording. Write the summary in the format below and save it with `rsagent paper summary REF` (standard input or `--file`). The command creates or replaces only the managed summary block and leaves the rest of the note intact. Revise earlier content instead of appending a second summary. Keep it brief (about 300-450 words, excluding Reading notes and the Related work paragraph) but capture the main points. Distinguish Confirmed (user agreed) from Tentative (suggested). Do not invent details not in the paper or discussion; write "unknown" or "not discussed" instead.
 4. Run `rsagent checkpoint`, then confirm the paper number and path in one line.
 
 Summary format:

@@ -252,3 +252,22 @@ def test_set_summary_on_note_without_block_preserves_notes(project):
     sources.set_summary(project, 'x1', '## Summary\n\nhello')
     text = (project.root / 'papers/x0001_old_one.md').read_text()
     assert 'hello' in text and 'kept' in text and text.index('rs:summary:start') < text.index('## Reading notes')
+
+
+def test_overview_block_is_separate_from_summary(project, tmp_path):
+    _three_papers(project, tmp_path)
+    sources.set_summary(project, 'x1', '## Summary\n\n### Main idea\n- Goal: s')
+    sources.set_overview(project, 'x1', '### Goal\n- first overview')
+    assert 'Goal: s' in sources.show_summary(project, 'x1')['summary']
+    assert 'first overview' in sources.show_summary(project, 'x1', overview=True)['summary']
+    sources.set_overview(project, 'x1', '### Goal\n- second overview')
+    note = (project.root / sources.list_sources(project)[0]['path']).read_text()
+    assert note.count('rs:overview:start') == 1 and note.count('rs:summary:start') == 1
+    assert 'second overview' in note and 'first overview' not in note and 'Goal: s' in note
+    assert note.index('rs:summary:start') < note.index('rs:overview:start')
+
+
+def test_overview_missing_message_and_empty_rejected(project, tmp_path):
+    _three_papers(project, tmp_path)
+    assert sources.show_summary(project, 'x1', overview=True)['summary'] is None
+    with pytest.raises(ValueError, match='empty'): sources.set_overview(project, 'x1', '  ')
