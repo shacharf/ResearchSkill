@@ -140,7 +140,7 @@ Cite as `\cite{0002}`. The first time a paper is discussed (`rsagent paper discu
 
 ### Paper overview and summaries
 
-When you start discussing a paper, the agent reads the whole PDF and gives an initial overview of how it works: goal, training inputs, input representations, target construction, what is predicted, losses and learning, inference, a concrete example from the paper, meaning and limitations, and one main idea (no benchmark results). The prompt is `skills/rs-paper/overview.md`. The overview is saved in the note (`<!-- rs:overview:start -->` block, `rsagent paper show REF --overview`). The summary below is written later from the saved overview, the Q&A you had, and the paper, using the clarifications from the discussion to improve on the overview.
+When you start discussing a paper, the agent reads the whole PDF and gives an initial overview built around the paper's contribution: core idea, mechanism, model interface, where supervision comes from, deployment and why it matters, then a conceptual takeaway, a numbered trace of one cycle when the mechanism has a loop or stages, and brief caveats (no benchmark results). The prompt is `skills/rs-paper/overview.md`. The overview is saved in the note (`<!-- rs:overview:start -->` block, `rsagent paper show REF --overview`). The summary below is written later from the saved overview, the Q&A you had, and the paper, using the clarifications from the discussion to improve on the overview.
 
 Each paper note has a summary block (between `<!-- rs:summary:start -->` and `<!-- rs:summary:end -->`). It is written by the agent at every save, switch, pause or close for the papers discussed in that conversation, and on request with `/rs-paper REF`:
 

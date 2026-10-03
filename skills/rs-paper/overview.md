@@ -1,37 +1,34 @@
 # Initial paper overview
 
-Goal: help the user understand the paper's main point: its algorithm, network architecture, dataset and losses. Do not discuss benchmark results.
+Goal: explain the paper so the reader understands its central idea, how it works concretely, and why it matters. Do not discuss benchmark results.
 
-Read the entire PDF first (the note's `local_file`, otherwise the paper's PDF URL). If the full text cannot be read, say so and stop; do not work from the abstract. Be brief. Prefer concrete operations over phrases such as "captures dynamics" or "improves representations". Cite the sections, figures and equations you rely on. Write "not specified" for anything the paper does not state; never fill gaps. Tag interpretations as such, separate from paper-grounded facts.
+Read the entire PDF first (the note's `local_file`, otherwise the paper's PDF URL). If the full text cannot be read, say so and stop; do not work from the abstract. Organize the explanation around the paper's contribution, not a fixed list of technical components. Write "not specified" for anything the paper does not state; never fill gaps. Prefer a coherent explanation over maximum detail; leave secondary details for follow-up questions.
 
-Write clear bullets in this order:
+Write in this order:
 
-### Goal
-What problem is addressed, and what changes relative to the baseline?
+### Core points
+4-6 clear bullets. Include those that apply and adapt or replace the rest for the paper's type (algorithm, framework, dataset, benchmark, theory); distinguish these types.
+- **Core idea:** the central design decision in plain language.
+- **Mechanism:** how the main components interact.
+- **Policy/model interface:** what it observes and produces.
+- **Training data and learning:** where the supervision comes from.
+- **Deployment:** what happens during execution.
+- **Why this matters:** what the design enables.
 
-### Training inputs
-List all required data. Separate model inputs from information used only for supervision. Distinguish training stages.
+### Takeaway
+One short conceptual takeaway: what changes relative to the usual approach.
 
-### Input representations
-How images/video, language, actions and other inputs are encoded. Which encoders are frozen and which are trained.
+### One cycle
+Only when the mechanism contains a feedback loop or several stages: a numbered sequence tracing one complete cycle, using concrete verbs (e.g. observe, render, compare, predict, correct, execute). Prefer an example, figure or algorithm from the paper itself.
 
-### Target construction
-Exactly how supervision targets are built. Distinguish joint encoding from separate encoding followed by concatenation, pooling, subtraction or projection.
+### Caveats
+One or two lines on what the work does not establish, plus any unresolved details.
 
-### What is predicted
-Each predictor's inputs and outputs, as a compact equation or arrow chain with every symbol defined. Say precisely where language (or any conditioning) influences the computation.
+Style:
+- Introduce architecture, representations, targets and losses only where they help explain the mechanism. Do not force every paper into an encoder-predictor-target template.
+- Include equations only when they clarify something prose cannot, with every symbol defined. Do not front-load dimensions, hyperparameters, optimizer settings or implementation details.
+- Prefer concrete operations over phrases such as "captures dynamics" or "improves representations".
+- Keep factual qualifications brief and next to the claim they qualify. Tag interpretations as such, separate from paper-grounded facts, without letting uncertainty labels dominate the explanation.
+- Cite the sections, figures and equations you rely on, unobtrusively.
 
-### Losses and learning
-What each loss compares, how the losses are combined, which components receive gradients and which stay fixed.
-
-### Inference
-What inputs are needed at execution, which training branches are removed, and whether future prediction is actually performed.
-
-### Concrete example
-Trace one example through inputs, target construction, predictions and losses, using an example, figure or algorithm from the paper itself. If the paper has none, build one from the paper's stated formats and say so.
-
-### Meaning and limitations
-What the prediction objective does and does not establish. Separate paper-grounded facts from interpretations and unresolved details.
-
-### Main conceptual idea
-One plain-language sentence on how the training signal helps the final task.
+Before finishing, check that training data, inputs, targets, losses and inference are covered where applicable; add them to the bullets only if they matter for understanding the idea.
